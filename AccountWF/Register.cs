@@ -1,9 +1,17 @@
-﻿using AccountWF.Models;
+﻿using AccountWF.Constant;
+using AccountWF.DataAccess.Concrete;
+using AccountWF.DataAccess.SqlDbContext;
+using AccountWF.Entities;
+using Microsoft.VisualBasic.Logging;
+using System.Data.SqlClient;
+using System.Reflection;
 
 namespace AccountWF
 {
     public partial class Register : Form
     {
+        private UserRepository userRepository = new();
+
         public Register()
         {
             InitializeComponent();
@@ -31,24 +39,40 @@ namespace AccountWF
                         newUser.Name = nameBox.Text;
                         newUser.Email = emailBox.Text;
                         newUser.Password = passwordBox.Text;
-                        DB.Database.users.Add(newUser);
-                        MessageBox.Show("Qeydiyyat tamamlandı");
-                        this.Hide();
-                        signInButton_Click(null, null);
+                        
+
+                        try
+                        {
+                            userRepository.Add(newUser);
+                            MessageBox.Show(ErrorMessage.SuccessSignUp);
+                            this.Hide();
+                            signInButton_Click(null, null);
+                        }
+                        catch (SqlException ex)
+                        {
+                            if (ex.Number == 2601 || ex.Number == 2627) // Unique constraint violation
+                            {
+                                MessageBox.Show(ErrorMessage.CheckDuplicateEmail);
+                            }
+                            else
+                            {
+                                MessageBox.Show(ErrorMessage.ExceptionMessage);
+                            }
+                        }
                     }
                     else
                     {
-                        MessageBox.Show("Təkrar parol əsas parola bərəabər deyil :)");
+                        MessageBox.Show(ErrorMessage.PasswordMismatch);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Parol 3 simvoldan az olmamalıdır");
+                    MessageBox.Show(ErrorMessage.PasswordLengthError);
                 }
             }
             else
             {
-                MessageBox.Show("Xanalar doldurulmalıdır!!");
+                MessageBox.Show(ErrorMessage.EmptyFields);
             }
         }
 
@@ -57,6 +81,11 @@ namespace AccountWF
             this.Hide();
             Login login = new Login();
             login.Show();
+        }
+
+        private void Register_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

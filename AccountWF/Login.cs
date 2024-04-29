@@ -1,7 +1,8 @@
-﻿using AccountWF.Models;
-using Microsoft.VisualBasic.Logging;
-using Microsoft.Win32;
-using Account = AccountWF.Models.Account;
+﻿using AccountWF.Constant;
+using AccountWF.DataAccess.SqlDbContext;
+using AccountWF.Entities;
+using System.Data.SqlClient;
+using Account = AccountWF.Entities.Account;
 
 namespace AccountWF
 {
@@ -24,62 +25,88 @@ namespace AccountWF
             {
                 if (passwordBox.Text.Length > 3)
                 {
-                    if (CheckUser(emailBox.Text, passwordBox.Text,out User model))
+                    using (SqlConnection connection = new SqlConnection(DB.Database.ConnectionString))
                     {
-                        
-                            /*FrmAdmin frmAdmin = new FrmAdmin();
-                            frmAdmin.Show();
-                            this.Hide();*/
-
-                        if(emailBox.Text == "admin")
+                        connection.Open();
+                        string cmdText = @"SELECT * FROM Roles where id=1";
+                        using (SqlCommand cmd = new SqlCommand(cmdText, connection))
                         {
-                            FrmAdmin frmAdmin = new FrmAdmin();
-                            this.Hide();
-                            frmAdmin.Show();
-                        }
-                        else
-                        {
-                            if(model is not null)
+                            SqlDataReader reader = cmd.ExecuteReader();
+                            if (reader.Read())
                             {
-                                Account account = new Account(model);
-                                FrmAccount frmAccount = new FrmAccount(account);
-                                this.Hide();
-                                frmAccount.Show();
+
+                                if (emailBox.Text.ToLower() == "admin" && passwordBox.Text.ToLower() == "admin")
+                                {
+                                    //MessageBox.Show("Admin xos geldin");
+                                    FrmAdmin frmAdmin = new FrmAdmin();
+                                    this.Hide();
+                                    frmAdmin.Show();
+                                    return;
+                                }
+
                             }
+                        }
+                    }
+
+
+                    if (CheckUser(emailBox.Text, passwordBox.Text, out User model))
+                    {
+                        if (model is not null)
+                        {
+                            //MessageBox.Show("Ugurla daxil oldun");
+                            Account account = new Account(model);
+                            FrmAccount frmAccount = new FrmAccount(account);
+                            this.Hide();
+                            frmAccount.Show();
                         }
                     }
                     else
                     {
-                        MessageBox.Show("Səhv Profil adı və ya Parol daxil etmisiniz!!");
+                        MessageBox.Show(ErrorMessage.InvalidProfileOrPassword);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Parol 3 simvoldan az olmamalıdır");
+                    MessageBox.Show(ErrorMessage.PasswordLengthError);
                 }
             }
             else
             {
-                MessageBox.Show("Xanalar doldurulmalıdır!!");
+                MessageBox.Show(ErrorMessage.EmptyFields);
 
             }
         }
-        private bool CheckUser(string login, string password,out User model)
+        private bool CheckUser(string login, string password, out User model)
         {
-            foreach (User user in DB.Database.users)
+            model = null;
+
+            using (SqlConnection connection = new SqlConnection(DB.Database.ConnectionString))
             {
-                
-                if (login == user.Name && password == user.Password)
+                connection.Open();
+                string cmdText = "SELECT * FROM users WHERE Name = @Name";
+                using (SqlCommand cmd = new SqlCommand(cmdText, connection))
                 {
-                    //this.Hide();
-                    //FrmAccount frmAccount = new FrmAccount();
-                    //this.Close();
-                    MessageBox.Show("Giris ugurludur!");
-                    model = user;
-                    return true;
+                    cmd.Parameters.AddWithValue("@Name", login);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        if (password == reader["password"].ToString())
+                        {
+                            model = new User
+                            {
+                                Id = (int)reader["Id"],
+                                Name = reader["Name"].ToString(),
+                                Password = reader["password"].ToString(),
+                                Email = reader["email"].ToString()
+                            };
+                            return true;
+                        }
+                    }
                 }
             }
-            model = new User();
+
+
+
             return false;
         }
 
@@ -89,6 +116,11 @@ namespace AccountWF
             this.Hide();
             Register register = new Register();
             register.Show();
+        }
+
+        private void Login_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

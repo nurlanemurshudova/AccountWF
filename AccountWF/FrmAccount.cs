@@ -1,11 +1,14 @@
-﻿using Profil = AccountWF.Models.Account;
+﻿using AccountWF.DataAccess.Abstract;
+using AccountWF.DataAccess.Concrete;
+using Profil = AccountWF.Entities.Account;
 
 namespace AccountWF
 {
     public partial class FrmAccount : Form
     {
         private List<TextBox> boxes = new List<TextBox>();
-        private UserManager _manager = new UserManager();
+        //private UserManager _manager = new UserManager();
+        private UserRepository userRepository = new();
         private Profil _account;
         public FrmAccount(Profil account)
         {
@@ -67,7 +70,8 @@ namespace AccountWF
             oldProfile.Name = nameBox.Text;
             oldProfile.Email = emailBox.Text;
             oldProfile.Password = passwordBox.Text;
-            _manager.Update(oldProfile);
+            //_manager.Update(oldProfile);
+            userRepository.Update(oldProfile);
             BoxsEnabledFalse();
             TextBoxFill();
         }

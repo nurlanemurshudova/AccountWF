@@ -145,6 +145,7 @@
             FormBorderStyle = FormBorderStyle.None;
             Name = "Login";
             Text = "Form1";
+            FormClosed += Login_FormClosed;
             panel.ResumeLayout(false);
             panel.PerformLayout();
             ResumeLayout(false);

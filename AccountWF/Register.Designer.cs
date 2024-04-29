@@ -187,6 +187,7 @@
             FormBorderStyle = FormBorderStyle.None;
             Name = "Register";
             Text = "Register";
+            FormClosed += Register_FormClosed;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);

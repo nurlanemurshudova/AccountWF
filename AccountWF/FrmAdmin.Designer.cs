@@ -245,6 +245,7 @@
             Controls.Add(dtTable);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Text = "FrmAdmin";
+            FormClosed += FrmAdmin_FormClosed;
             Load += FrmAdmin_Load;
             ((System.ComponentModel.ISupportInitialize)dtTable).EndInit();
             ResumeLayout(false);
